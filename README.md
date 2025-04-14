@@ -7,3 +7,13 @@ You control a Virtual Controller Ship which has components which you can customi
 This controller ship is a representation of a controller device which can be used to control another game. Fortnite, for example.
 You can map buttons and Axes to the controller components which creates a system similar to how Steam handles its controller remapping.
 You can only control one component at a time, and friends can sabotage your ship.
+
+Todo list
+---
+
+- [ ] Controller Emulation
+- [ ] Virtual Controller Ship customization
+- [ ] Virtual Controller Component
+- [ ] Multiplayer
+- [ ] Custom Controls
+
