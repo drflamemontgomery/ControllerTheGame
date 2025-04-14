@@ -134,9 +134,11 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   // We need to be able to calculate `delta_time`
   const double now = (double)SDL_GetTicks();
-  if (state->delta_time < 1 / 60.0) {
+  /*
+  if (state->delta_time <= 0.00000000001f) {
     state->delta_time = 1 / 60.0;
   }
+  */
   state->last_tick = now;
 
   static double total_time = 0;
@@ -144,14 +146,25 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
   const double fps = frames == 0 ? 0 : frames / state->last_tick * 1000.0;
 
+  // Update our physics world
   const float timestep = 1.0f / 60.0f;
   const int substep_count = 4;
   b2World_Step(state->world, timestep, substep_count);
 
+  // update our root player
+  // TODO replace with root scene node
   objcall(state->player.super, update, state->delta_time);
+
+  // Clear the rendering scene
+  // TODO contemplate potential optimizations which
+  // probably are unnecessary
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 1);
   SDL_RenderClear(renderer);
 
+  // Get current viewport and set (0,0) as bottom left.
+  // Down as positive y.
+  // Right as positive x.
+  // TODO implement Camera transformations
   SDL_Rect viewport;
   SDL_GetRenderViewport(renderer, &viewport);
   SDL_FPoint initial = {
@@ -159,16 +172,23 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
       .y = viewport.h,
   };
 
+  // Create a `RenderContext`
+  // TODO Create it as a static variable and save unnecessary
+  // stack operations if the object grows
   RenderContext frame_ctx = RenderContext_create(renderer);
   Stack_push(&frame_ctx.transforms, &initial);
 
+  // Render Root Player Sequence
   objcall(state->player.super, preRender, &frame_ctx);
   objcall(state->player.super, render, &frame_ctx);
   objcall(state->player.super, postRender, &frame_ctx);
 
+#ifdef DEBUG
+  // Draw the box2d world
   debug_draw.context = &frame_ctx;
   b2World_Draw(state->world, &debug_draw);
 
+  // Draw debug information for FPS, delta time, total time
   SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
   int ypos = 0;
   char buf[16];
@@ -178,10 +198,10 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   snprintf(buf, 11, "%.2ffps", fps);
   SDL_RenderDebugText(renderer, 10, ypos++ * 20 + 10, buf);
 
-  snprintf(buf, 16, "%.2ffps (true)", 1 / state->delta_time);
+  snprintf(buf, 16, "%.2ffps (true)", 1.0 / state->delta_time);
   SDL_RenderDebugText(renderer, 10, ypos++ * 20 + 10, buf);
 
-  snprintf(buf, 16, "%.1f", state->last_tick / 1000.0);
+  snprintf(buf, 16, "%gs", state->last_tick / 1000.0);
   SDL_RenderDebugText(renderer, 10, ypos++ * 20 + 10, buf);
 
   if (state->options.vsync) {
@@ -191,13 +211,16 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     SDL_RenderDebugText(renderer, 10, ypos++ * 20 + 10, "FRAME CAP ENABLED");
   }
 
+#endif // DEBUG
+
   /* put the newly-cleared rendering on the screen. */
   SDL_RenderPresent(renderer);
 
+  // Frame capping
   const double fps_tick = (double)SDL_GetTicks();
   const double wanted_frame_tick = 1000 / 60.0;
   const double dif = fps_tick - state->last_tick;
-  if (dif < wanted_frame_tick) {
+  if (state->options.frame_cap && dif < wanted_frame_tick) {
     SDL_Delay(wanted_frame_tick - dif);
   }
 
@@ -211,5 +234,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 /* This function runs once at shutdown. */
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
   /* SDL will clean up the window/renderer for us. */
+
+  // Destroy the Application
   AppState_destroy((AppState *)appstate);
+  free(appstate);
 }
