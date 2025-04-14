@@ -19,8 +19,6 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#define DEBUG
-
 #ifdef DEBUG
 #define trace(msg, ...)                                                        \
   fprintf(stderr, "[%s:%d]: " msg "\n", __FILE__,                              \
