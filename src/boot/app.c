@@ -54,8 +54,8 @@ AppState AppState_default() {
   b2CreateSegmentShape(ground, &groundshapedef, &groundsegment);
 
   return (AppState){
-      .deltaTime = 0.0f,
-      .lastTick = SDL_GetTicks(),
+      .delta_time = 0.0f,
+      .last_tick = SDL_GetTicks(),
       .controller_out = ControllerDevice_default(),
       .options = {false, false},
       .player = player,

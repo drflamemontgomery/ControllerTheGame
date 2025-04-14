@@ -42,12 +42,12 @@ void TestObj_render(Object2D *self, RenderContext *ctx) {
   SDL_SetRenderDrawColor(ctx->renderer, 0xff, 0, 0, 0xff);
   SDL_RenderFillRect(ctx->renderer, &rect);
 
-  const int originRadius = 2;
+  const int origin_radius = 2;
   SDL_FRect origin_rect = {
-      .x = transform.x - originRadius,
-      .y = transform.y - originRadius,
-      .w = originRadius * 2,
-      .h = originRadius * 2,
+      .x = transform.x - origin_radius,
+      .y = transform.y - origin_radius,
+      .w = origin_radius * 2,
+      .h = origin_radius * 2,
   };
 
   SDL_SetRenderDrawColor(ctx->renderer, 0, 0xff, 0, 0xff);

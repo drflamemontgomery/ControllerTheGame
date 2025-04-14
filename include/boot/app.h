@@ -33,8 +33,8 @@ typedef struct AppOptions {
 } AppOptions;
 
 typedef struct AppState {
-  double deltaTime;
-  double lastTick;
+  double delta_time;
+  double last_tick;
 
   AppOptions options;
   Player player;
