@@ -8,6 +8,24 @@ This controller ship is a representation of a controller device which can be use
 You can map buttons and Axes to the controller components which creates a system similar to how Steam handles its controller remapping.
 You can only control one component at a time, and friends can sabotage your ship.
 
+Requirements
+---
+
+- Unix based operating system (Only been tested on Arch-Linux)
+- [SDL3](https://www.libsdl.org/)
+- [Box2D](https://box2d.org/)
+- [GCC](https://gcc.gnu.org/) (Installed by default on Linux)
+
+Building
+---
+
+To build, run `make build`
+
+By default, the application builds in debug mode.
+To run in release mode, supply the NODEBUG flag.  
+
+`make build NODEBUG=true`
+
 Todo list
 ---
 
@@ -16,4 +34,3 @@ Todo list
 - [ ] Virtual Controller Component
 - [ ] Multiplayer
 - [ ] Custom Controls
-
