@@ -15,6 +15,15 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 CC = gcc
+
+ifdef NODEBUG
+	DEBUGFLAGS := #empty
+else
+	DEBUGFLAGS := -DDEBUG=1
+endif
+
+# Object Files to be created. If this starts becoming larger, 
+# it may need to be split into sub-makefiles.
 OBJECTS = \
 			obj/boot/main.o\
 			obj/boot/app.o\
@@ -27,6 +36,10 @@ OBJECTS = \
 			obj/input/controller.o\
 			obj/debug/debug_draw.o\
 			$(END)
+
+# Directories to be created in the obj directory structure
+# It is difficult to generate a rule automatically so it
+# is manually specified.
 OBJDIRS = \
 					obj/boot\
 					obj/screen\
@@ -36,17 +49,18 @@ OBJDIRS = \
 					obj/debug\
 					$(END)
 
-LIBS := -lSDL3 -DDEBUG=1 -lbox2d -lcairo
-CFLAGS := $(CFLAGS) -I/usr/include -I/usr/local/include -Iinclude
+LIBS := -lSDL3 -lbox2d
+CFLAGS := $(CFLAGS) -Iinclude $(DEBUGFLAGS)
+
+# Define the global project name for easy use
 PROJECT_NAME := controller_game
 
 default: build
 
+.PHONY: build run
 build: bin/$(PROJECT_NAME)
 run: bin/$(PROJECT_NAME)
 	./bin/$(PROJECT_NAME)
-
-.PHONY: build run
 
 bin:
 	mkdir -p bin
@@ -60,6 +74,9 @@ obj/%.o : src/%.c
 $(OBJDIRS):
 	mkdir -p $@
 
+# Need to run `make clean` if header files have been modified
+# to clear the cache and prevent incorrect structure alignment
+# in compiled files
+.PHONY: clean
 clean:
 	rm $(OBJECTS)
-.PHONY: clean
