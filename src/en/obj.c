@@ -38,6 +38,7 @@ Object2D Object2D_create(float x, float y, float width, float height) {
       .preRender = Object2D_preRender,
       .render = Object2D_render,
       .update = Object2D_update,
+      .destroy = Object2D_destroy,
   };
 }
 
@@ -45,8 +46,7 @@ void Object2D_destroy(Object2D *self) {
   for (Object2DNode *head = (Object2DNode *)self->children.head;
        head != NULL && head->obj != NULL;
        head = (Object2DNode *)head->node.next) {
-    head->obj->destroy(head->obj);
-    free(head->obj);
+    objrefcall(head->obj, destroy);
   }
 }
 

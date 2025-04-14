@@ -57,7 +57,7 @@ AppState AppState_default() {
       .delta_time = 0.0f,
       .last_tick = SDL_GetTicks(),
       .controller_out = ControllerDevice_default(),
-      .options = {false, false},
+      .options = {false, true},
       .player = player,
       .testobj = testobj,
       .world = world,
@@ -68,5 +68,4 @@ void AppState_destroy(AppState *self) {
   Player_destroy(&self->player);
   safefree(self->testobj);
   b2DestroyWorld(self->world);
-  trace("Destroyed World");
 }
