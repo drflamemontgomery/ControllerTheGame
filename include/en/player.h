@@ -20,6 +20,7 @@
 #define PLAYER_H
 
 #include "en/obj.h"
+#include "heap/allocator.h"
 #include <box2d/box2d.h>
 
 typedef struct PlayerController {
@@ -40,10 +41,15 @@ typedef struct PlayerController {
   bool (*getAction)(struct PlayerController *);
   bool (*getDismount)(struct PlayerController *);
   bool (*getAttack)(struct PlayerController *);
+
+  void (*destroy)(struct PlayerController *);
 } PlayerController;
 
 typedef struct KeyboardController {
+
   PlayerController super;
+  Allocator *allocator;
+
   int left;
   int right;
   int up;
@@ -65,7 +71,7 @@ typedef struct KeyboardController {
   int quaterny;
 } KeyboardController;
 
-KeyboardController KeyboardController_default();
+KeyboardController *KeyboardController_default(Allocator *allocator);
 
 enum PlayerState {
   IDLE,

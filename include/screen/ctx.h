@@ -35,5 +35,6 @@ typedef struct RenderContext {
 
 RenderContext RenderContext_create(SDL_Renderer *renderer);
 SDL_FPoint RenderContext_getTransform(RenderContext *self);
+void RenderContext_destroy(RenderContext *self);
 
 #endif // CTX_H

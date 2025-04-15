@@ -25,6 +25,7 @@
 
 #include "en/player.h"
 #include "en/testobj.h"
+#include "heap/allocator.h"
 #include "input/controller.h"
 
 typedef struct AppOptions {
@@ -36,6 +37,10 @@ typedef struct AppState {
   double delta_time;
   double last_tick;
 
+  // We hold reference to this so we can change the memory management easier in
+  // future
+  Allocator *allocator;
+
   AppOptions options;
   Player player;
   Object2D *testobj;
@@ -44,7 +49,7 @@ typedef struct AppState {
   b2WorldId world;
 } AppState;
 
-AppState AppState_default();
+AppState *AppState_default(Allocator *allocator);
 void AppState_destroy(AppState *self);
 
 #endif // APP_H

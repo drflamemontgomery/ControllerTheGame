@@ -41,9 +41,9 @@ typedef struct list {
 } List;
 
 List List_default();
-void List_push(List *list, ListNode *node);
-ListNode *List_pop(List *list);
-void List_remove(List *list, ListNode *node);
-void List_destroy(List *list);
+void List_push(List *self, ListNode *node);
+ListNode *List_pop(List *self);
+void List_remove(List *self, ListNode *node);
+void List_destroy(List *self);
 
 #endif // LIST_H

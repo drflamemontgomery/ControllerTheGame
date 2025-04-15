@@ -1,5 +1,5 @@
 /*
-    Heap Stack Structure
+    Memory Allocation Handler
     Copyright (C) 2025  Ashton Warner
 
     This program is free software: you can redistribute it and/or modify
@@ -16,26 +16,29 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef STACK_H
-#define STACK_H
+#ifndef ALLOCATOR_H
+#define ALLOCATOR_H
 
 #include <stdio.h>
-#include <stdlib.h>
 
-#ifndef DEFAULT_STACK_SIZE
-#define DEFAULT_STACK_SIZE 8
-#endif
+typedef struct Allocator {
+  /** \brief Allocate n amount of objects of size N
+   *
+   */
+  void *(*alloc)(struct Allocator *, size_t, size_t);
+  void (*free)(struct Allocator *, void *);
+  void *(*remap)(struct Allocator *, void *, size_t, size_t);
+} Allocator;
 
-typedef struct stack {
-  size_t len;
-  size_t max_len;
-  size_t stride;
-  void *stack;
-} Stack;
+/** \brief Standard C library allocator
+ *
+ * \warn Not recommended to use by itself
+ */
+extern Allocator std_allocator;
 
-Stack Stack_create(size_t element_size);
-void Stack_push(Stack *self, void *elem);
-void *Stack_pop(Stack *self);
-void Stack_destroy(Stack *self);
+void *allocMem(Allocator *allocator, size_t elem_size, size_t num_of_elems);
+void freeMem(Allocator *allocator, void *ptr);
+void *remapMem(Allocator *allocator, void *ptr, size_t elem_size,
+               size_t num_of_elems);
 
-#endif // STACK_H
+#endif // ALLOCATOR_H
