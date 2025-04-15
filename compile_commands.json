@@ -1,7 +1,7 @@
 [
   {
     "directory": "/home/looking/C/SDL3/controller_game/",
-    "command": "/usr/bin/gcc -DDEBUG -lSDL3 -lm -lbox2d -c src/boot/main.c -o obj/boot/main.o -I/home/looking/C/SDL3/controller_game/include",
+    "command": "/usr/bin/gcc -DDEBUG -lSDL3 -lm -lbox2d -c src/boot/main.c -o obj/boot/main.o -I/home/looking/C/SDL3/controller_game/include -Wall -Werror -Wno-missing-braces -W -Wno-unused-parameter",
     "file": "src/boot/main.c",
     "output": "obj/boot/main.o"
   }

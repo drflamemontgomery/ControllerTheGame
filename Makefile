@@ -19,7 +19,7 @@ CC = gcc
 ifdef NODEBUG
 	DEBUGFLAGS := #empty
 else
-	DEBUGFLAGS := -DDEBUG=1 -g -fsanitize=leak
+	DEBUGFLAGS := -DDEBUG=1 -g -fsanitize=leak -rdynamic -Wmissing-field-initializers -Wall -Werror -Wno-missing-braces -Wno-unused-parameter -W 
 endif
 
 # Object Files to be created. If this starts becoming larger, 
