@@ -19,17 +19,16 @@
 #include <unistd.h>
 #endif
 
-#include "en/player.h"
-#include "heap/allocator.h"
-#include "screen/ctx.h"
-#include <SDL3/SDL_events.h>
-#include <SDL3/SDL_keycode.h>
+#include <execinfo.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_keycode.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
@@ -37,6 +36,9 @@
 #include "boot/app.h"
 #include "debug/debug.h"
 #include "debug/debug_draw.h"
+#include "en/player.h"
+#include "heap/allocator.h"
+#include "screen/ctx.h"
 #include "util/safe.h"
 
 /* We will use this renderer to draw into this window every frame. */
@@ -46,8 +48,20 @@ static SDL_Renderer *renderer = NULL;
 // Our main file keeps the pointer to our SDL key states
 bool *KEYS = NULL;
 
+// Signal Handler
+static void sigint_handler(int sig) {
+  void *array[10];
+  size_t size;
+
+  size = backtrace(array, 10);
+  trace("Error: signal %d", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
+}
+
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+  signal(SIGABRT, sigint_handler);
   SDL_SetAppMetadata("Controller The Game", "1.0",
                      "com.drflame.controllergame");
 
@@ -198,7 +212,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
   int ypos = 0;
   char buf[16];
-  snprintf(buf, 11, "%gs", state->delta_time);
+  snprintf(buf, 14, "%gs", state->delta_time);
   SDL_RenderDebugText(renderer, 10, ypos++ * 20 + 10, buf);
 
   snprintf(buf, 11, "%.2ffps", fps);

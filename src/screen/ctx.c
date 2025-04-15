@@ -23,7 +23,7 @@
 RenderContext RenderContext_create(SDL_Renderer *renderer) {
   return (RenderContext){
       .renderer = renderer,
-      .transforms = Stack_create(sizeof(SDL_FPoint)),
+      .transforms = Stack_create(&std_allocator, sizeof(SDL_FPoint)),
   };
 }
 SDL_FPoint RenderContext_getTransform(RenderContext *self) {

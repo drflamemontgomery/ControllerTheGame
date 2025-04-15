@@ -22,18 +22,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "heap/allocator.h"
+
 #ifndef DEFAULT_STACK_SIZE
 #define DEFAULT_STACK_SIZE 8
 #endif
 
 typedef struct stack {
+  Allocator *allocator;
   size_t len;
   size_t max_len;
   size_t stride;
   void *stack;
 } Stack;
 
-Stack Stack_create(size_t element_size);
+Stack Stack_create(Allocator *allocator, size_t element_size);
 void Stack_push(Stack *self, void *elem);
 void *Stack_pop(Stack *self);
 void Stack_destroy(Stack *self);

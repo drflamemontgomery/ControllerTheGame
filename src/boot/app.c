@@ -33,7 +33,7 @@ AppState *AppState_default(Allocator *allocator) {
 
   Player player = Player_create(world, 2.0f, -3.0f, NULL);
 
-  Object2D *testobj = malloc(sizeof(Object2D));
+  Object2D *testobj = allocMem(allocator, sizeof(Object2D), 1);
   *testobj = TestObj_create(32.0f, 32.0f);
 
   Object2D_addChild(&player.super, testobj);
@@ -69,7 +69,7 @@ AppState *AppState_default(Allocator *allocator) {
 
 void AppState_destroy(AppState *self) {
   Player_destroy(&self->player);
-  safefree(self->testobj);
+  freeMem(self->allocator, self->testobj);
   b2DestroyWorld(self->world);
 
   freeMem(self->allocator, self);

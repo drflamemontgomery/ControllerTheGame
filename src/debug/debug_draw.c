@@ -17,6 +17,7 @@
 */
 
 #include "debug/debug_draw.h"
+#include "heap/allocator.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_render.h>
 #include <box2d/types.h>
@@ -125,7 +126,8 @@ void debugDrawSolidPolygon(b2Transform transform, const b2Vec2 *vertices,
   float tx = transform.p.x * PPM_F + tf.x;
   float ty = transform.p.y * PPM_F + tf.y;
   SDL_FColor g_color = getColor(color, 0x7f);
-  SDL_Vertex *g_vertices = malloc(sizeof(SDL_Vertex) * vertex_count);
+  SDL_Vertex *g_vertices =
+      allocMem(&std_allocator, sizeof(SDL_Vertex), vertex_count);
   for (int i = 0; i < vertex_count; i++) {
     g_vertices[i].position.x = vertices[i].x * PPM_F + tx;
     g_vertices[i].position.y = vertices[i].y * PPM_F + ty;
@@ -133,7 +135,7 @@ void debugDrawSolidPolygon(b2Transform transform, const b2Vec2 *vertices,
   }
 
   int index_length = (vertex_count - 2) * 3;
-  int *indices = malloc(sizeof(int) * index_length);
+  int *indices = allocMem(&std_allocator, sizeof(int), index_length);
   for (int i = 0; i < vertex_count - 2; i++) {
     indices[i * 3] = 0;
     indices[i * 3 + 1] = i + 1;
@@ -144,8 +146,8 @@ void debugDrawSolidPolygon(b2Transform transform, const b2Vec2 *vertices,
                           indices, index_length)) {
     trace("SDL_GetError(): %s", SDL_GetError());
   };
-  free(indices);
-  free(g_vertices);
+  freeMem(&std_allocator, indices);
+  freeMem(&std_allocator, g_vertices);
 }
 
 void debugDrawPoint(b2Vec2 p, float size, b2HexColor color,

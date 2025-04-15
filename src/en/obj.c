@@ -84,6 +84,8 @@ void Object2D_update(Object2D *self, double delta_time) {
 void Object2D_addChild(Object2D *self, Object2D *child) {
   if (child == NULL)
     return;
+
+  // TODO remove malloc
   Object2DNode *node = malloc(sizeof(Object2DNode));
   node->obj = child;
   List_push(&self->children, &node->node);

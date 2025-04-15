@@ -20,19 +20,21 @@
 #include "debug/debug.h"
 #include <memory.h>
 
-Stack Stack_create(size_t element_size) {
+Stack Stack_create(Allocator *allocator, size_t element_size) {
   return (Stack){
+      .allocator = allocator,
       .len = 0,
       .max_len = DEFAULT_STACK_SIZE,
       .stride = element_size,
-      .stack = malloc(DEFAULT_STACK_SIZE * element_size),
+      .stack = allocMem(allocator, DEFAULT_STACK_SIZE, element_size),
   };
 }
 
 void Stack_push(Stack *self, void *elem) {
   if (self->len == self->max_len) {
     self->max_len *= 1.5f;
-    self->stack = realloc(self->stack, self->max_len * self->stride);
+    self->stack =
+        remapMem(self->allocator, self->stack, self->stride, self->max_len);
   }
 
   memcpy(self->stack + self->len * self->stride, elem, self->stride);
@@ -48,5 +50,5 @@ void *Stack_pop(Stack *self) {
 
 void Stack_destroy(Stack *self) {
   debugAssert(self != NULL, "self == NULL");
-  free(self->stack);
+  freeMem(self->allocator, self->stack);
 }
