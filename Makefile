@@ -19,7 +19,7 @@ CC = gcc
 ifdef NODEBUG
 	DEBUGFLAGS := #empty
 else
-	DEBUGFLAGS := -DDEBUG=1
+	DEBUGFLAGS := -DDEBUG=1 -g -fsanitize=leak
 endif
 
 # Object Files to be created. If this starts becoming larger, 
@@ -30,6 +30,7 @@ OBJECTS = \
 			obj/screen/ctx.o\
 			obj/util/stack.o\
 			obj/util/list.o\
+			obj/heap/allocator.o\
 			obj/en/obj.o\
 			obj/en/player.o\
 			obj/en/testobj.o\
@@ -47,6 +48,7 @@ OBJDIRS = \
 					obj/en\
 					obj/input\
 					obj/debug\
+					obj/heap\
 					$(END)
 
 LIBS := -lSDL3 -lbox2d
