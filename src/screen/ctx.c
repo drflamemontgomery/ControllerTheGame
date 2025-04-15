@@ -17,6 +17,7 @@
 */
 
 #include "screen/ctx.h"
+#include "debug/debug.h"
 #include <SDL3/SDL_rect.h>
 
 RenderContext RenderContext_create(SDL_Renderer *renderer) {
@@ -31,4 +32,8 @@ SDL_FPoint RenderContext_getTransform(RenderContext *self) {
   }
 
   return ((SDL_FPoint *)(self->transforms.stack))[self->transforms.len - 1];
+}
+void RenderContext_destroy(RenderContext *self) {
+  debugAssert(self != NULL, "self == NULL");
+  Stack_destroy(&self->transforms);
 }

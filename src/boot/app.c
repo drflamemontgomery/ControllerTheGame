@@ -25,7 +25,7 @@
 #include <box2d/types.h>
 #include <stdio.h>
 
-AppState AppState_default() {
+AppState *AppState_default(Allocator *allocator) {
 
   b2WorldDef world_def = b2DefaultWorldDef();
   world_def.gravity = (b2Vec2){0.0f, 1.0f};
@@ -53,7 +53,8 @@ AppState AppState_default() {
   groundshapedef.density = 1.0f;
   b2CreateSegmentShape(ground, &groundshapedef, &groundsegment);
 
-  return (AppState){
+  AppState *state = allocMem(allocator, sizeof(AppState), 1);
+  *state = (AppState){
       .delta_time = 0.0f,
       .last_tick = SDL_GetTicks(),
       .controller_out = ControllerDevice_default(),
@@ -61,11 +62,15 @@ AppState AppState_default() {
       .player = player,
       .testobj = testobj,
       .world = world,
+      .allocator = allocator,
   };
+  return state;
 }
 
 void AppState_destroy(AppState *self) {
   Player_destroy(&self->player);
   safefree(self->testobj);
   b2DestroyWorld(self->world);
+
+  freeMem(self->allocator, self);
 }

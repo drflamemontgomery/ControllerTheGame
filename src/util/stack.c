@@ -17,6 +17,7 @@
 */
 
 #include "util/stack.h"
+#include "debug/debug.h"
 #include <memory.h>
 
 Stack Stack_create(size_t element_size) {
@@ -43,4 +44,9 @@ void *Stack_pop(Stack *self) {
     return NULL;
   self->len--;
   return self->stack + self->len * self->stride;
+}
+
+void Stack_destroy(Stack *self) {
+  debugAssert(self != NULL, "self == NULL");
+  free(self->stack);
 }

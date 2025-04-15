@@ -15,8 +15,12 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+#ifdef DEBUG
+#include <unistd.h>
+#endif
 
 #include "en/player.h"
+#include "heap/allocator.h"
 #include "screen/ctx.h"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_keycode.h>
@@ -72,15 +76,13 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
   // Use the default App State Initialization and create
   // it on the heap so that we can pass it around easily
-  AppState *state = malloc(sizeof(AppState));
-  *state = AppState_default();
+  AppState *state = AppState_default(&std_allocator);
 
-  // Create a Heap-Allocated Controller Component for our player
-  // so we can access movement
-  KeyboardController *controller = malloc(sizeof(KeyboardController));
-  *controller = KeyboardController_default();
-
-  state->player.controller = (PlayerController *)controller;
+  // Create a Heap-Allocated Controller Component for our player so we can
+  // access movement.
+  // TODO make a controller subsystem for handling controls.
+  state->player.controller =
+      (PlayerController *)KeyboardController_default(&std_allocator);
 
   // This allows our Application to access the state
   *appstate = (void *)state;
@@ -188,6 +190,10 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   debug_draw.context = &frame_ctx;
   b2World_Draw(state->world, &debug_draw);
 
+  // We no longer need the RenderContext and it has heap memory
+  // stored in it. So lets destroy it
+  RenderContext_destroy(&frame_ctx);
+
   // Draw debug information for FPS, delta time, total time
   SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
   int ypos = 0;
@@ -237,5 +243,4 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
 
   // Destroy the Application
   AppState_destroy((AppState *)appstate);
-  free(appstate);
 }

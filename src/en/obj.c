@@ -48,6 +48,8 @@ void Object2D_destroy(Object2D *self) {
        head = (Object2DNode *)head->node.next) {
     objrefcall(head->obj, destroy);
   }
+
+  List_destroy(&self->children);
 }
 
 void Object2D_preRender(Object2D *self, RenderContext *ctx) {
