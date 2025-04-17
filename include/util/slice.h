@@ -24,7 +24,7 @@
  */
 #define Slice(T)                                                               \
   struct {                                                                     \
-    size_t len;                                                                \
+    const size_t len;                                                                \
     T *ptr;                                                                    \
   }
 
@@ -35,14 +35,16 @@
     debugAssert(START < (SLICE).len, "Slice_sub() start >= " #SLICE ".len");   \
     int end = END < 0 ? ((SLICE).len + END) : END;                             \
     debugAssert(END < (SLICE).len, "Slice_sub() end >= " #SLICE ".len");       \
-    typeof(SLICE) ret = Slice_create(&(SLICE).ptr[START], end - START + 1);    \
+    Slice(typeof(*(SLICE).ptr)) ret =                                          \
+        Slice_create(&(SLICE).ptr[START], end - START + 1);                    \
     ret;                                                                       \
   })
 #define forArray(SLICE, VAR_NAME)                                              \
   for (typeof((SLICE).ptr) VAR_NAME = ((SLICE).ptr);                           \
        VAR_NAME != ((SLICE).ptr) + ((SLICE).len); VAR_NAME++)
 
-#define forIterArray(SLICE, ITER_NAME) for(size_t ITER_NAME = 0; ITER_NAME < (SLICE).len; ITER_NAME++)
+#define forIterArray(SLICE, ITER_NAME)                                         \
+  for (size_t ITER_NAME = 0; ITER_NAME < (SLICE).len; ITER_NAME++)
 
 #define Array(T)                                                               \
   struct {                                                                     \

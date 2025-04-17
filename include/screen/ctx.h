@@ -30,7 +30,7 @@ typedef struct Camera2D {
 
 typedef struct RenderContext {
   SDL_Renderer *renderer;
-  Stack transforms;
+  Stack(SDL_FPoint) transforms;
 } RenderContext;
 
 RenderContext RenderContext_create(SDL_Renderer *renderer);

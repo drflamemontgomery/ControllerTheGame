@@ -23,7 +23,8 @@
 #include "util/list.h"
 
 typedef struct Object2DNode {
-  ListNode node;
+  ListNode *prev;
+  ListNode *next;
   Object2D *obj;
 } Object2DNode;
 

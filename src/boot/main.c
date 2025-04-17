@@ -48,6 +48,7 @@ static SDL_Renderer *renderer = NULL;
 // Our main file keeps the pointer to our SDL key states
 bool *KEYS = NULL;
 
+#ifdef DEBUG
 // Signal Handler
 static void sigint_handler(int sig) {
   void *array[10];
@@ -58,10 +59,13 @@ static void sigint_handler(int sig) {
   backtrace_symbols_fd(array, size, STDERR_FILENO);
   exit(1);
 }
+#endif
 
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+#ifdef DEBUG
   signal(SIGABRT, sigint_handler);
+#endif
   SDL_SetAppMetadata("Controller The Game", "1.0",
                      "com.drflame.controllergame");
 
@@ -192,7 +196,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   // TODO Create it as a static variable and save unnecessary
   // stack operations if the object grows
   RenderContext frame_ctx = RenderContext_create(renderer);
-  Stack_push(&frame_ctx.transforms, &initial);
+  Stack_push(frame_ctx.transforms, initial);
 
   // Render Root Player Sequence
   objcall(state->player.super, preRender, &frame_ctx);
@@ -211,14 +215,14 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   // Draw debug information for FPS, delta time, total time
   SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
   int ypos = 0;
-  char buf[16];
+  char buf[32];
   snprintf(buf, 14, "%gs", state->delta_time);
   SDL_RenderDebugText(renderer, 10, ypos++ * 20 + 10, buf);
 
-  snprintf(buf, 11, "%.2ffps", fps);
+  snprintf(buf, 31, "%.2ffps", fps);
   SDL_RenderDebugText(renderer, 10, ypos++ * 20 + 10, buf);
 
-  snprintf(buf, 16, "%.2ffps (true)", 1.0 / state->delta_time);
+  snprintf(buf, 31, "%.2ffps (true)", 1.0 / state->delta_time);
   SDL_RenderDebugText(renderer, 10, ypos++ * 20 + 10, buf);
 
   snprintf(buf, 16, "%gs", state->last_tick / 1000.0);

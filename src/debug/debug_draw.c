@@ -18,6 +18,7 @@
 
 #include "debug/debug_draw.h"
 #include "heap/allocator.h"
+#include "util/slice.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_render.h>
 #include <box2d/types.h>
@@ -125,29 +126,29 @@ void debugDrawSolidPolygon(b2Transform transform, const b2Vec2 *vertices,
   SDL_FPoint tf = RenderContext_getTransform(ctx);
   float tx = transform.p.x * PPM_F + tf.x;
   float ty = transform.p.y * PPM_F + tf.y;
-  SDL_FColor g_color = getColor(color, 0x7f);
-  SDL_Vertex *g_vertices =
-      allocMem(&std_allocator, sizeof(SDL_Vertex), vertex_count);
-  for (int i = 0; i < vertex_count; i++) {
-    g_vertices[i].position.x = vertices[i].x * PPM_F + tx;
-    g_vertices[i].position.y = vertices[i].y * PPM_F + ty;
-    g_vertices[i].color = g_color;
+  setColor(ctx, color, 0x7F);
+  SDL_FColor g_color = getColor(color, 0xFF);
+  Array(SDL_Vertex) g_vertices = Array_create(SDL_Vertex, vertex_count);
+
+  size_t i = 0;
+  forArray(g_vertices, elem) {
+    elem->position.x = vertices[i].x * PPM_F + tx;
+    elem->position.y = vertices[i].y * PPM_F + ty;
+    elem->color = g_color;
+    i++;
   }
 
-  int index_length = (vertex_count - 2) * 3;
-  int *indices = allocMem(&std_allocator, sizeof(int), index_length);
+  Array(int) indices = Array_create(int, (vertex_count - 2) * 3);
   for (int i = 0; i < vertex_count - 2; i++) {
-    indices[i * 3] = 0;
-    indices[i * 3 + 1] = i + 1;
-    indices[i * 3 + 2] = i + 2;
+    indices.ptr[i * 3] = 0;
+    indices.ptr[i * 3 + 1] = i + 1;
+    indices.ptr[i * 3 + 2] = i + 2;
   }
 
-  if (!SDL_RenderGeometry(ctx->renderer, NULL, g_vertices, vertex_count,
-                          indices, index_length)) {
+  if (!SDL_RenderGeometry(ctx->renderer, NULL, g_vertices.ptr, g_vertices.len,
+                          indices.ptr, indices.len)) {
     trace("SDL_GetError(): %s", SDL_GetError());
   };
-  freeMem(&std_allocator, indices);
-  freeMem(&std_allocator, g_vertices);
 }
 
 void debugDrawPoint(b2Vec2 p, float size, b2HexColor color,

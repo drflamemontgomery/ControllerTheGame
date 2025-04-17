@@ -23,17 +23,17 @@
 RenderContext RenderContext_create(SDL_Renderer *renderer) {
   return (RenderContext){
       .renderer = renderer,
-      .transforms = Stack_create(&std_allocator, sizeof(SDL_FPoint)),
+      .transforms = Stack_create(SDL_FPoint, &std_allocator),
   };
 }
 SDL_FPoint RenderContext_getTransform(RenderContext *self) {
   if (self->transforms.len == 0) {
     return (SDL_FPoint){0, 0};
   }
-
-  return ((SDL_FPoint *)(self->transforms.stack))[self->transforms.len - 1];
+  SDL_FPoint *ret = Stack_peek(self->transforms);
+  return *ret;
 }
 void RenderContext_destroy(RenderContext *self) {
   debugAssert(self != NULL, "self == NULL");
-  Stack_destroy(&self->transforms);
+  Stack_destroy(self->transforms);
 }
