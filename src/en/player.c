@@ -156,7 +156,7 @@ bool KeyboardController_getAttack(KeyboardController *self) {
 }
 void KeyboardController_destroy(KeyboardController *self) {
   debugAssert(self != NULL, "self == NULL");
-  freeMem(self->allocator, self);
+  freePtr(self->allocator, self);
 }
 
 const PlayerController KEYBOARD_SUPER = {
@@ -185,7 +185,7 @@ const PlayerController KEYBOARD_SUPER = {
 };
 
 KeyboardController *KeyboardController_default(Allocator *allocator) {
-  KeyboardController *self = allocMem(allocator, sizeof(KeyboardController), 1);
+  KeyboardController *self = allocPtr(allocator, sizeof(KeyboardController), 1);
 
   *self = (KeyboardController){
       .super = KEYBOARD_SUPER,

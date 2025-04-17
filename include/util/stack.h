@@ -23,22 +23,51 @@
 #include <stdlib.h>
 
 #include "heap/allocator.h"
+#include "util/slice.h"
 
 #ifndef DEFAULT_STACK_SIZE
 #define DEFAULT_STACK_SIZE 8
 #endif
 
-typedef struct stack {
-  Allocator *allocator;
-  size_t len;
-  size_t max_len;
-  size_t stride;
-  void *stack;
-} Stack;
+#define Stack(T)                                                               \
+  struct {                                                                     \
+    Allocator *allocator;                                                      \
+    size_t len;                                                                \
+    Slice(T) data;                                                             \
+  }
 
-Stack Stack_create(Allocator *allocator, size_t element_size);
-void Stack_push(Stack *self, void *elem);
-void *Stack_pop(Stack *self);
-void Stack_destroy(Stack *self);
+#define Stack_create(T, ALLOCATOR)                                             \
+  {                                                                            \
+      .allocator = ALLOCATOR,                                                  \
+      .len = 0,                                                                \
+      .data = allocSlice(T, ALLOCATOR, DEFAULT_STACK_SIZE),                    \
+  }
+
+#define Stack_push(SELF, ELEM)                                                 \
+  {                                                                            \
+    if ((SELF).len == (SELF).data.len) {                                       \
+      (SELF).data.ptr = (typeof((SELF).data.ptr))remapBlock(                   \
+          (SELF).allocator, (SELF).data.len * sizeof(*(SELF).data.ptr),        \
+          (char *)(SELF).data.ptr, sizeof(*(SELF).data.ptr),                   \
+          (SELF).data.len * 1.5f);                                             \
+      (SELF).data.len = (SELF).data.len * 1.5f;                                \
+    }                                                                          \
+    (SELF).data.ptr[(SELF).len] = ELEM;                                        \
+    (SELF).len += 1;                                                           \
+  }
+
+#define Stack_pop(SELF)                                                        \
+  ({                                                                           \
+    debugAssert((SELF).len > 0, #SELF ".len == 0");                            \
+    (SELF).data.ptr[--(SELF).len]                                          ;    \
+  })
+
+#define Stack_peek(SELF)                                                       \
+  ((SELF).len == 0 ? NULL : &(SELF).data.ptr[(SELF).len - 1])
+
+#define Stack_destroy(SELF)                                                    \
+  {                                                                            \
+    freeSlice((SELF).allocator, (SELF).data);                                  \
+  }
 
 #endif // STACK_H

@@ -159,7 +159,7 @@ ControllerComponent ControllerComponent_create(Allocator *allocator,
           {
               .length = 0,
               .max_value = 4,
-              .value = allocMem(allocator, sizeof(int), 4),
+              .value = allocPtr(allocator, sizeof(int), 4),
           },
   };
 }
@@ -178,5 +178,5 @@ int ControllerComponent_getQuaterny(const ControllerComponent *self) {
 
 void ControllerComponent_destroy(ControllerComponent *self) {
   debugAssert(self != NULL, "self == NULL");
-  freeMem(self->allocator, self);
+  freePtr(self->allocator, self);
 }

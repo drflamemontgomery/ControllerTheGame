@@ -19,7 +19,7 @@ CC = gcc
 ifdef NODEBUG
 	DEBUGFLAGS := #empty
 else
-	DEBUGFLAGS := -DDEBUG=1 -g -fsanitize=leak -rdynamic -Wmissing-field-initializers -Wall -Werror -Wno-missing-braces -Wno-unused-parameter -W 
+	DEBUGFLAGS := -DDEBUG -g -fsanitize=leak -rdynamic -Wmissing-field-initializers -Wall -Werror -Wno-missing-braces -Wno-unused-parameter -W 
 endif
 
 # Object Files to be created. If this starts becoming larger, 
@@ -28,7 +28,6 @@ OBJECTS = \
 			obj/boot/main.o\
 			obj/boot/app.o\
 			obj/screen/ctx.o\
-			obj/util/stack.o\
 			obj/util/list.o\
 			obj/heap/allocator.o\
 			obj/en/obj.o\

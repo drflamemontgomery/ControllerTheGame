@@ -33,7 +33,7 @@ AppState *AppState_default(Allocator *allocator) {
 
   Player player = Player_create(world, 2.0f, -3.0f, NULL);
 
-  Object2D *testobj = allocMem(allocator, sizeof(Object2D), 1);
+  Object2D *testobj = allocPtr(allocator, sizeof(Object2D), 1);
   *testobj = TestObj_create(32.0f, 32.0f);
 
   Object2D_addChild(&player.super, testobj);
@@ -53,7 +53,7 @@ AppState *AppState_default(Allocator *allocator) {
   groundshapedef.density = 1.0f;
   b2CreateSegmentShape(ground, &groundshapedef, &groundsegment);
 
-  AppState *state = allocMem(allocator, sizeof(AppState), 1);
+  AppState *state = allocPtr(allocator, sizeof(AppState), 1);
   *state = (AppState){
       .delta_time = 0.0f,
       .last_tick = SDL_GetTicks(),
@@ -69,8 +69,8 @@ AppState *AppState_default(Allocator *allocator) {
 
 void AppState_destroy(AppState *self) {
   Player_destroy(&self->player);
-  freeMem(self->allocator, self->testobj);
+  freePtr(self->allocator, self->testobj);
   b2DestroyWorld(self->world);
 
-  freeMem(self->allocator, self);
+  freePtr(self->allocator, self);
 }

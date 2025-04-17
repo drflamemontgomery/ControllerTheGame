@@ -20,22 +20,33 @@
 #include "debug/debug.h"
 #include <stdio.h>
 
-List List_default() { return (List){.head = NULL, .tail = NULL}; }
-void List_push(List *self, ListNode *node) {
+List List_create(Allocator *allocator, size_t elem_size) {
+  return (List){
+      .head = NULL,
+      .tail = NULL,
+      .allocator = allocator,
+      .elem_size = elem_size,
+  };
+}
+ListNode *List_push(List *self) {
   if (self == NULL)
-    return;
-  if (node == NULL)
-    return;
+    return NULL;
+
+  ListNode *node = allocPtr(self->allocator, sizeof(ListNode), 1);
+  if (self->elem_size > 0) {
+    node->value = allocPtr(self->allocator, self->elem_size, 1);
+  }
 
   if (self->head == NULL) {
     self->tail = self->head = node;
     node->prev = NULL;
-    return;
+    return node;
   }
 
   self->tail->next = node;
   node->prev = self->tail;
   self->tail = node;
+  return node;
 }
 
 ListNode *List_pop(List *self) {
@@ -93,7 +104,7 @@ void List_destroy(List *self) {
   debugAssert(self != NULL, "self == NULL");
   for (ListNode *node = self->head; node != NULL;) {
     ListNode *next = node->next;
-    free(node);
+    freePtr(self->allocator, node);
 
     node = next;
   }

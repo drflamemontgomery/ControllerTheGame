@@ -21,13 +21,16 @@
 
 #include <stdio.h>
 
+#include "util/attr.h"
+#include "util/slice.h"
+
 typedef struct Allocator {
   /** \brief Allocate n amount of objects of size N
    *
    */
   void *(*alloc)(struct Allocator *, size_t, size_t);
   void (*free)(struct Allocator *, void *);
-  void *(*remap)(struct Allocator *, void *, size_t, size_t);
+  void *(*remap)(struct Allocator *, size_t, char[], size_t, size_t);
 } Allocator;
 
 /** \brief Standard C library allocator
@@ -36,9 +39,23 @@ typedef struct Allocator {
  */
 extern Allocator std_allocator;
 
-void *allocMem(Allocator *allocator, size_t elem_size, size_t num_of_elems);
-void freeMem(Allocator *allocator, void *ptr);
-void *remapMem(Allocator *allocator, void *ptr, size_t elem_size,
-               size_t num_of_elems);
+void freePtr(Allocator *allocator, void *ptr);
+
+MALLOC_ATTR(freePtr, 2)
+void *allocPtr(Allocator *allocator, size_t elem_size, size_t num_of_elems);
+void *remapBlock(Allocator *allocator, size_t ptr_size, char ptr[ptr_size],
+                 size_t elem_size, size_t num_of_elems);
+
+#define allocSlice(T, allocator, num_of_elems)                                 \
+  Slice_create(allocPtr(allocator, sizeof(T), num_of_elems), num_of_elems)
+
+#define freeSlice(allocator, slice) freePtr(allocator, (slice).ptr)
+#define remapSlice(allocator, slice, elem_size, num_of_elems)                  \
+  Slice_create(typeof(*(slice).ptr),                                           \
+               remapBlock(allocator, (slice).len * sizeof(*(slice).ptr),       \
+                          (char *)(slice).ptr, elem_size, num_of_elems),       \
+               num_of_elems)
+#define remapPtr(allocator, ptr, elem_size, num_of_elems)                      \
+  remapBlock(allocator, 0, ptr, elem_size, num_of_elems)
 
 #endif // ALLOCATOR_H
