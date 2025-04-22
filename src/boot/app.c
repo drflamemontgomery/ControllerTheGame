@@ -57,17 +57,33 @@ AppState *AppState_default(Allocator *allocator) {
   *state = (AppState){
       .delta_time = 0.0f,
       .last_tick = SDL_GetTicks(),
+      .running = true,
+
       .controller_out = ControllerDevice_default(),
       .options = {false, true},
       .player = player,
       .testobj = testobj,
       .world = world,
       .allocator = allocator,
+
+      .fixedUpdate_thread = NULL,
+      .fixedUpdate_mutex = NULL,
   };
   return state;
 }
 
 void AppState_destroy(AppState *self) {
+  debugAssert(self != NULL, "self == NULL");
+  self->running = false;
+  if (self->fixedUpdate_thread != NULL) {
+    SDL_WaitThread(self->fixedUpdate_thread, NULL);
+    self->fixedUpdate_thread = NULL;
+  }
+  if(self->fixedUpdate_mutex != NULL) {
+    SDL_DestroyMutex(self->fixedUpdate_mutex);
+    self->fixedUpdate_mutex = NULL;
+  }
+
   Player_destroy(&self->player);
   freePtr(self->allocator, self->testobj);
   b2DestroyWorld(self->world);
