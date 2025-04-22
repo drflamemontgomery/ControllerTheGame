@@ -36,6 +36,7 @@ typedef struct AppOptions {
 typedef struct AppState {
   double delta_time;
   double last_tick;
+  bool running;
 
   // We hold reference to this so we can change the memory management easier in
   // future
@@ -45,6 +46,9 @@ typedef struct AppState {
   Player player;
   Object2D *testobj;
   ControllerDevice controller_out;
+
+  SDL_Thread *fixedUpdate_thread;
+  SDL_Mutex* fixedUpdate_mutex;
 
   b2WorldId world;
 } AppState;

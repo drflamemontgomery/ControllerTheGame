@@ -68,6 +68,41 @@ static void sigint_handler(int sig) {
 }
 #endif
 
+// Fixed Update Loop for main object updating
+// Box2D works best in a fixed update
+static SDL_AppResult fixedUpdate(AppState *state) {
+  debugAssert(state != NULL, "appstate == NULL");
+  double last_tick = (double)SDL_GetTicks();
+
+  // Our appstate needs to let us know when to stop
+  while (state->running) {
+
+    // Update our physics world
+    const float timestep = 1.0f / 60.0f;
+    const int substep_count = 4;
+
+    // Prevent the Main thread from attempting to access box2d World
+    SDL_LockMutex(state->fixedUpdate_mutex);
+    b2World_Step(state->world, timestep, substep_count);
+    // Allow the Main thread to access box2d again
+    SDL_UnlockMutex(state->fixedUpdate_mutex);
+
+    // update our root player
+    // TODO replace with root scene node
+    objcall(state->player.super, update, state->delta_time);
+
+    // Frame capping
+    const double fps_tick = (double)SDL_GetTicks();
+    const double wanted_frame_tick = 1000 / 60.0;
+    const double dif = fps_tick - last_tick;
+    if (dif >= 0.0f) {
+      SDL_Delay(wanted_frame_tick - dif);
+    }
+    last_tick = SDL_GetTicks();
+  }
+  return SDL_APP_SUCCESS;
+}
+
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 #ifdef DEBUG
@@ -113,6 +148,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   // TODO make a controller subsystem for handling controls.
   state->player.controller =
       (PlayerController *)KeyboardController_default(global_allocator);
+
+  state->fixedUpdate_thread = SDL_CreateThread((SDL_ThreadFunction)fixedUpdate,
+                                               "Fixed Update", (void *)state);
+  if (state->fixedUpdate_thread == NULL) {
+    SDL_Log("Failed to create fixedUpdate Thread: %s", SDL_GetError());
+    return SDL_APP_FAILURE;
+  }
+  state->fixedUpdate_mutex = SDL_CreateMutex();
 
   // This allows our Application to access the state
   *appstate = (void *)state;
@@ -173,19 +216,9 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   */
   state->last_tick = now;
 
-  static double total_time = 0;
   static int frames = 0;
 
   const double fps = frames == 0 ? 0 : frames / state->last_tick * 1000.0;
-
-  // Update our physics world
-  const float timestep = 1.0f / 60.0f;
-  const int substep_count = 4;
-  b2World_Step(state->world, timestep, substep_count);
-
-  // update our root player
-  // TODO replace with root scene node
-  objcall(state->player.super, update, state->delta_time);
 
   // Clear the rendering scene
   // TODO contemplate potential optimizations which
@@ -218,7 +251,13 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 #ifdef DEBUG
   // Draw the box2d world
   debug_draw.context = &frame_ctx;
-  b2World_Draw(state->world, &debug_draw);
+
+  // Lock the thread mutex so the fixed update doesn't break and have a race
+  // condition with box2d. We only need TryLockMutex because this update function runs extremely fast in most cases.
+  if (SDL_TryLockMutex(state->fixedUpdate_mutex)) {
+    b2World_Draw(state->world, &debug_draw);
+    SDL_UnlockMutex(state->fixedUpdate_mutex);
+  }
 
   // We no longer need the RenderContext and it has heap memory
   // stored in it. So lets destroy it
@@ -252,17 +291,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   /* put the newly-cleared rendering on the screen. */
   SDL_RenderPresent(renderer);
 
-  // Frame capping
-  const double fps_tick = (double)SDL_GetTicks();
-  const double wanted_frame_tick = 1000 / 60.0;
-  const double dif = fps_tick - state->last_tick;
-  if (state->options.frame_cap && dif < wanted_frame_tick) {
-    SDL_Delay(wanted_frame_tick - dif);
-  }
-
   state->delta_time = ((double)SDL_GetTicks() - state->last_tick) / 1000.0;
   frames++;
-  total_time += state->delta_time;
 
   return SDL_APP_CONTINUE; /* carry on with the program! */
 }
