@@ -15,17 +15,21 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+#include "heap/arena_allocator.h"
+#ifdef DEBUG
+#include <unistd.h>
+#endif
 
-#include "en/player.h"
-#include "screen/ctx.h"
-#include <SDL3/SDL_events.h>
-#include <SDL3/SDL_keycode.h>
+#include <execinfo.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_keycode.h>
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_timer.h>
@@ -33,6 +37,9 @@
 #include "boot/app.h"
 #include "debug/debug.h"
 #include "debug/debug_draw.h"
+#include "en/player.h"
+#include "heap/allocator.h"
+#include "screen/ctx.h"
 #include "util/safe.h"
 
 /* We will use this renderer to draw into this window every frame. */
@@ -42,8 +49,30 @@ static SDL_Renderer *renderer = NULL;
 // Our main file keeps the pointer to our SDL key states
 bool *KEYS = NULL;
 
+ArenaAllocator global_arena_allocator;
+Allocator *global_allocator;
+
+#ifdef DEBUG
+// Signal Handler
+static void sigint_handler(int sig) {
+
+  const size_t BACKTRACE_DISTANCE = 30;
+  void *array[BACKTRACE_DISTANCE];
+  size_t size;
+
+  size = backtrace(array, BACKTRACE_DISTANCE);
+  trace("Error: signal %d", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+
+  exit(1);
+}
+#endif
+
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+#ifdef DEBUG
+  signal(SIGABRT, sigint_handler);
+#endif
   SDL_SetAppMetadata("Controller The Game", "1.0",
                      "com.drflame.controllergame");
 
@@ -70,17 +99,20 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
+  // Create a Global ArenaAllocator
+  global_arena_allocator = ArenaAllocator_create(&std_allocator);
+  global_allocator = ArenaAllocator_getAllocator(&global_arena_allocator);
+  // global_allocator = &std_allocator;
+
   // Use the default App State Initialization and create
   // it on the heap so that we can pass it around easily
-  AppState *state = malloc(sizeof(AppState));
-  *state = AppState_default();
+  AppState *state = AppState_default(global_allocator);
 
-  // Create a Heap-Allocated Controller Component for our player
-  // so we can access movement
-  KeyboardController *controller = malloc(sizeof(KeyboardController));
-  *controller = KeyboardController_default();
-
-  state->player.controller = (PlayerController *)controller;
+  // Create a Heap-Allocated Controller Component for our player so we can
+  // access movement.
+  // TODO make a controller subsystem for handling controls.
+  state->player.controller =
+      (PlayerController *)KeyboardController_default(global_allocator);
 
   // This allows our Application to access the state
   *appstate = (void *)state;
@@ -176,7 +208,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   // TODO Create it as a static variable and save unnecessary
   // stack operations if the object grows
   RenderContext frame_ctx = RenderContext_create(renderer);
-  Stack_push(&frame_ctx.transforms, &initial);
+  Stack_push(frame_ctx.transforms, initial);
 
   // Render Root Player Sequence
   objcall(state->player.super, preRender, &frame_ctx);
@@ -188,17 +220,21 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   debug_draw.context = &frame_ctx;
   b2World_Draw(state->world, &debug_draw);
 
+  // We no longer need the RenderContext and it has heap memory
+  // stored in it. So lets destroy it
+  RenderContext_destroy(&frame_ctx);
+
   // Draw debug information for FPS, delta time, total time
   SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
   int ypos = 0;
-  char buf[16];
-  snprintf(buf, 11, "%gs", state->delta_time);
+  char buf[32];
+  snprintf(buf, 14, "%gs", state->delta_time);
   SDL_RenderDebugText(renderer, 10, ypos++ * 20 + 10, buf);
 
-  snprintf(buf, 11, "%.2ffps", fps);
+  snprintf(buf, 31, "%.2ffps", fps);
   SDL_RenderDebugText(renderer, 10, ypos++ * 20 + 10, buf);
 
-  snprintf(buf, 16, "%.2ffps (true)", 1.0 / state->delta_time);
+  snprintf(buf, 31, "%.2ffps (true)", 1.0 / state->delta_time);
   SDL_RenderDebugText(renderer, 10, ypos++ * 20 + 10, buf);
 
   snprintf(buf, 16, "%gs", state->last_tick / 1000.0);
@@ -237,5 +273,6 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
 
   // Destroy the Application
   AppState_destroy((AppState *)appstate);
-  free(appstate);
+
+  ArenaAllocator_destroy(&global_arena_allocator);
 }

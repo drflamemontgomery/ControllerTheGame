@@ -19,31 +19,33 @@
 #ifndef LIST_H
 #define LIST_H
 
-/*
- * only contains data to traverse. To use, place the list node as the first
- * element in your list structure
- *
- * ```c
- * struct example_node {
- *   list_node node;
- *   int data;
- * };
- * ```
- */
-typedef struct list_node {
-  struct list_node *prev;
-  struct list_node *next;
+#include <stdio.h>
+
+#include "heap/allocator.h"
+
+typedef struct ListNode {
+  struct ListNode *prev;
+  struct ListNode *next;
+  void *value;
 } ListNode;
 
-typedef struct list {
+/** \brief Linked List Structure
+ *
+ * \param elem_size   when elem_size == 0. Allocation of elements is handled by
+ *                    the list holder
+ */
+typedef struct List {
   ListNode *head;
   ListNode *tail;
+
+  size_t elem_size;
+  Allocator *allocator;
 } List;
 
-List List_default();
-void List_push(List *list, ListNode *node);
-ListNode *List_pop(List *list);
-void List_remove(List *list, ListNode *node);
-void List_destroy(List *list);
+List List_create(Allocator *allocator, size_t elem_size);
+ListNode *List_push(List *self);
+ListNode *List_pop(List *self);
+void List_remove(List *self, ListNode *node);
+void List_destroy(List *self);
 
 #endif // LIST_H

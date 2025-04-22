@@ -59,7 +59,8 @@ void Player_destroy(Player *self) {
   b2DestroyBody(self->body);
   self->body = (b2BodyId){0, 0, 0};
 
-  free(self->controller);
+  // TODO make a controller subsystem responsible for destruction
+  objrefcall(self->controller, destroy);
   self->controller = NULL;
 
   Object2D_destroy(&self->super);
@@ -153,6 +154,10 @@ bool KeyboardController_getDismount(KeyboardController *self) {
 bool KeyboardController_getAttack(KeyboardController *self) {
   return KEYS[self->attack];
 }
+void KeyboardController_destroy(KeyboardController *self) {
+  debugAssert(self != NULL, "self == NULL");
+  freePtr(self->allocator, self);
+}
 
 const PlayerController KEYBOARD_SUPER = {
     .getAxisX = (float (*)(PlayerController *))KeyboardController_getAxisX,
@@ -176,10 +181,16 @@ const PlayerController KEYBOARD_SUPER = {
     .getAction = (bool (*)(PlayerController *))KeyboardController_getAction,
     .getDismount = (bool (*)(PlayerController *))KeyboardController_getDismount,
     .getAttack = (bool (*)(PlayerController *))KeyboardController_getAttack,
+    .destroy = (void (*)(PlayerController *))KeyboardController_destroy,
 };
-KeyboardController KeyboardController_default() {
-  return (KeyboardController){
+
+KeyboardController *KeyboardController_default(Allocator *allocator) {
+  KeyboardController *self = allocPtr(allocator, sizeof(KeyboardController), 1);
+
+  *self = (KeyboardController){
       .super = KEYBOARD_SUPER,
+      .allocator = allocator,
+
       .left = SDL_SCANCODE_LEFT,
       .right = SDL_SCANCODE_RIGHT,
       .up = SDL_SCANCODE_UP,
@@ -200,4 +211,5 @@ KeyboardController KeyboardController_default() {
       .tertiary = SDL_SCANCODE_C,
       .quaterny = SDL_SCANCODE_V,
   };
+  return self;
 }

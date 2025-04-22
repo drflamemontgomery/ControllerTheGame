@@ -28,7 +28,7 @@
 
 const ControllerDevice NullControllerDevice = {
     .fd = -1,
-    .hat = 0,
+    .hat = {0},
 };
 
 ControllerDevice ControllerDevice_default() {
@@ -99,7 +99,7 @@ ControllerDevice ControllerDevice_default() {
   trace("Create Device");
   return (ControllerDevice){
       .fd = fd,
-      .hat = 0,
+      .hat = {0},
   };
 }
 
@@ -150,26 +150,33 @@ void ControllerDevice_setHat(ControllerDevice *self, int hat_id, int value) {
   emit(self->fd, EV_SYN, SYN_REPORT, 0);
 }
 
-ControllerComponent ControllerComponent_create(enum ComponentId id) {
+ControllerComponent ControllerComponent_create(Allocator *allocator,
+                                               enum ComponentId id) {
   return (ControllerComponent){
+      .allocator = allocator,
       .id = id,
       .ids =
           {
               .length = 0,
               .max_value = 4,
-              .value = malloc(sizeof(int) * 4),
+              .value = allocPtr(allocator, sizeof(int), 4),
           },
   };
 }
-int ControllerComponent_getPrimary(ControllerComponent *self) {
+int ControllerComponent_getPrimary(const ControllerComponent *self) {
   return self->ids.length > 0 ? self->ids.value[0] : -1;
 }
-int ControllerComponent_getSecondary(ControllerComponent *self) {
+int ControllerComponent_getSecondary(const ControllerComponent *self) {
   return self->ids.length > 1 ? self->ids.value[1] : -1;
 }
-int ControllerComponent_getTertiary(ControllerComponent *self) {
+int ControllerComponent_getTertiary(const ControllerComponent *self) {
   return self->ids.length > 2 ? self->ids.value[2] : -1;
 }
-int ControllerComponent_getQuaterny(ControllerComponent *self) {
+int ControllerComponent_getQuaterny(const ControllerComponent *self) {
   return self->ids.length > 3 ? self->ids.value[3] : -1;
+}
+
+void ControllerComponent_destroy(ControllerComponent *self) {
+  debugAssert(self != NULL, "self == NULL");
+  freePtr(self->allocator, self);
 }

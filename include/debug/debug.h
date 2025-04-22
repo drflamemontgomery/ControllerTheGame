@@ -19,12 +19,25 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #ifdef DEBUG
 #define trace(msg, ...)                                                        \
   fprintf(stderr, "[%s:%d]: " msg "\n", __FILE__,                              \
           __LINE__ __VA_OPT__(, ) __VA_ARGS__)
+#define errtrace(msg, ...)                                                     \
+  fprintf(stderr, "[%s:%d] ERROR: " msg "\n", __FILE__,                        \
+          __LINE__ __VA_OPT__(, ) __VA_ARGS__)
+
+#define debugAssert(cond, msg, ...)                                            \
+  if (!(cond)) {                                                               \
+    errtrace("%s() " msg, __func__ __VA_OPT__(, ) __VA_ARGS__);                \
+    abort();                                                                   \
+  }
 #else
 #define trace(msg, ...)
+#define debugAssert(cond, msg, ...)
 #endif
 
 #endif // DEBUG_H

@@ -22,6 +22,8 @@
 #include <linux/uinput.h>
 #include <stdbool.h>
 
+#include "heap/allocator.h"
+
 #define HAT_UP 0
 #define HAT_RIGHT 1
 #define HAT_DOWN 2
@@ -55,6 +57,7 @@ enum ComponentId {
 
 // Components can control up to four Buttons|Axis|Hat Directions
 typedef struct ControllerComponent {
+  Allocator *allocator;
   enum ComponentId id;
   struct {
     size_t length;
@@ -62,10 +65,12 @@ typedef struct ControllerComponent {
     int *value;
   } ids;
 } ControllerComponent;
-ControllerComponent ControllerComponent_create(enum ComponentId id);
-int ControllerComponent_getPrimary(ControllerComponent *self);
-int ControllerComponent_getSecondary(ControllerComponent *self);
-int ControllerComponent_getTertiary(ControllerComponent *self);
-int ControllerComponent_getQuaterny(ControllerComponent *self);
+ControllerComponent ControllerComponent_create(Allocator *allocator,
+                                               enum ComponentId id);
+void ControllerComponent_destroy(ControllerComponent *self);
+int ControllerComponent_getPrimary(const ControllerComponent *self);
+int ControllerComponent_getSecondary(const ControllerComponent *self);
+int ControllerComponent_getTertiary(const ControllerComponent *self);
+int ControllerComponent_getQuaterny(const ControllerComponent *self);
 
 #endif // CONTROLLER_H

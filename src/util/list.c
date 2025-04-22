@@ -17,66 +17,76 @@
 */
 
 #include "util/list.h"
+#include "debug/debug.h"
 #include <stdio.h>
 
-List List_default() { return (List){.head = NULL, .tail = NULL}; }
-void List_push(List *list, ListNode *node) {
-  if (list == NULL)
-    return;
-  if (node == NULL)
-    return;
+List List_create(Allocator *allocator, size_t elem_size) {
+  return (List){
+      .head = NULL,
+      .tail = NULL,
+      .allocator = allocator,
+      .elem_size = elem_size,
+  };
+}
+ListNode *List_push(List *self) {
+  debugAssert(self != NULL, "self == NULL");
 
-  if (list->head == NULL) {
-    list->tail = list->head = node;
+  ListNode *node = self->elem_size > 0
+                       ? allocPtr(self->allocator, self->elem_size, 1)
+                       : allocPtr(self->allocator, sizeof(ListNode), 1);
+
+  if (self->head == NULL) {
+    self->tail = self->head = node;
     node->prev = NULL;
-    return;
+    return node;
   }
 
-  list->tail->next = node;
-  node->prev = list->tail;
-  list->tail = node;
+  self->tail->next = node;
+  node->prev = self->tail;
+  self->tail = node;
+  return node;
 }
 
-ListNode *List_pop(List *list) {
-  if (list == NULL)
+ListNode *List_pop(List *self) {
+  if (self == NULL)
     return NULL;
-  if (list->tail == NULL)
+  if (self->tail == NULL)
     return NULL;
 
-  ListNode *ret = list->tail;
-  if (list->tail == list->head) {
-    list->tail = list->head = NULL;
+  ListNode *ret = self->tail;
+  if (self->tail == self->head) {
+    self->tail = self->head = NULL;
     return ret;
   }
 
-  list->tail = list->tail->prev;
-  list->tail->next = NULL;
+  self->tail = self->tail->prev;
+  self->tail->next = NULL;
   ret->prev = NULL;
 
   return ret;
 }
 
-void List_remove(List *list, ListNode *node) {
-  if (list == NULL)
+void List_remove(List *self, ListNode *node) {
+  if (self == NULL)
     return;
   if (node == NULL)
     return;
 
-  if (list->head == node) {
-    if (list->head == list->tail) {
-      list->head = list->tail = NULL;
+  if (self->head == node) {
+    if (self->head == self->tail) {
+      self->head = self->tail = NULL;
       return;
     }
 
-    list->head = list->head->next;
-    list->head->prev = NULL;
+    self->head = self->head->next;
+    self->head->prev = NULL;
     node->next = NULL;
     return;
   }
 
-  if (list->tail == node) {
-    list->tail = list->tail->prev;
-    list->tail->next = NULL;
+  if (self->tail == node) {
+    self->tail = self->tail->prev;
+    self->tail->next = NULL;
     node->prev = NULL;
 
     return;
@@ -86,4 +96,14 @@ void List_remove(List *list, ListNode *node) {
   node->next->prev = node->prev;
   node->next = NULL;
   node->prev = NULL;
+}
+
+void List_destroy(List *self) {
+  debugAssert(self != NULL, "self == NULL");
+  for (ListNode *node = self->head; node != NULL;) {
+    ListNode *next = node->next;
+    freePtr(self->allocator, node);
+
+    node = next;
+  }
 }
