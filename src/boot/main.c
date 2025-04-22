@@ -15,6 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+#include "heap/arena_allocator.h"
 #ifdef DEBUG
 #include <unistd.h>
 #endif
@@ -48,15 +49,21 @@ static SDL_Renderer *renderer = NULL;
 // Our main file keeps the pointer to our SDL key states
 bool *KEYS = NULL;
 
+ArenaAllocator global_arena_allocator;
+Allocator *global_allocator;
+
 #ifdef DEBUG
 // Signal Handler
 static void sigint_handler(int sig) {
-  void *array[10];
+
+  const size_t BACKTRACE_DISTANCE = 30;
+  void *array[BACKTRACE_DISTANCE];
   size_t size;
 
-  size = backtrace(array, 10);
+  size = backtrace(array, BACKTRACE_DISTANCE);
   trace("Error: signal %d", sig);
   backtrace_symbols_fd(array, size, STDERR_FILENO);
+
   exit(1);
 }
 #endif
@@ -92,15 +99,20 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
+  // Create a Global ArenaAllocator
+  global_arena_allocator = ArenaAllocator_create(&std_allocator);
+  global_allocator = ArenaAllocator_getAllocator(&global_arena_allocator);
+  // global_allocator = &std_allocator;
+
   // Use the default App State Initialization and create
   // it on the heap so that we can pass it around easily
-  AppState *state = AppState_default(&std_allocator);
+  AppState *state = AppState_default(global_allocator);
 
   // Create a Heap-Allocated Controller Component for our player so we can
   // access movement.
   // TODO make a controller subsystem for handling controls.
   state->player.controller =
-      (PlayerController *)KeyboardController_default(&std_allocator);
+      (PlayerController *)KeyboardController_default(global_allocator);
 
   // This allows our Application to access the state
   *appstate = (void *)state;
@@ -261,4 +273,6 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
 
   // Destroy the Application
   AppState_destroy((AppState *)appstate);
+
+  ArenaAllocator_destroy(&global_arena_allocator);
 }

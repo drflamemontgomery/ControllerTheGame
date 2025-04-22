@@ -59,7 +59,7 @@
 #define Stack_pop(SELF)                                                        \
   ({                                                                           \
     debugAssert((SELF).len > 0, #SELF ".len == 0");                            \
-    (SELF).data.ptr[--(SELF).len]                                          ;    \
+    (SELF).data.ptr[--(SELF).len];                                             \
   })
 
 #define Stack_peek(SELF)                                                       \

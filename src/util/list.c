@@ -29,13 +29,11 @@ List List_create(Allocator *allocator, size_t elem_size) {
   };
 }
 ListNode *List_push(List *self) {
-  if (self == NULL)
-    return NULL;
+  debugAssert(self != NULL, "self == NULL");
 
-  ListNode *node = allocPtr(self->allocator, sizeof(ListNode), 1);
-  if (self->elem_size > 0) {
-    node->value = allocPtr(self->allocator, self->elem_size, 1);
-  }
+  ListNode *node = self->elem_size > 0
+                       ? allocPtr(self->allocator, self->elem_size, 1)
+                       : allocPtr(self->allocator, sizeof(ListNode), 1);
 
   if (self->head == NULL) {
     self->tail = self->head = node;

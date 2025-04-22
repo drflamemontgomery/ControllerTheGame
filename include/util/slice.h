@@ -24,7 +24,7 @@
  */
 #define Slice(T)                                                               \
   struct {                                                                     \
-    const size_t len;                                                                \
+    size_t len;                                                                \
     T *ptr;                                                                    \
   }
 

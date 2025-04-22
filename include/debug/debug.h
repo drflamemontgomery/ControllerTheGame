@@ -27,7 +27,7 @@
   fprintf(stderr, "[%s:%d]: " msg "\n", __FILE__,                              \
           __LINE__ __VA_OPT__(, ) __VA_ARGS__)
 #define errtrace(msg, ...)                                                     \
-  fprintf(stderr, "ERROR [%s:%d]: " msg "\n", __FILE__,                        \
+  fprintf(stderr, "[%s:%d] ERROR: " msg "\n", __FILE__,                        \
           __LINE__ __VA_OPT__(, ) __VA_ARGS__)
 
 #define debugAssert(cond, msg, ...)                                            \

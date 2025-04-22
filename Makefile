@@ -30,6 +30,7 @@ OBJECTS = \
 			obj/screen/ctx.o\
 			obj/util/list.o\
 			obj/heap/allocator.o\
+			obj/heap/arena_allocator.o\
 			obj/en/obj.o\
 			obj/en/player.o\
 			obj/en/testobj.o\

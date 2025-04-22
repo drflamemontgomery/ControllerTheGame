@@ -29,12 +29,14 @@ void *remapBlock(Allocator *allocator, size_t ptr_size, char ptr[ptr_size],
 }
 
 static void *std_alloc(Allocator *, size_t elem_size, size_t num_of_elems) {
-  return calloc(num_of_elems, elem_size);
+  void *ptr = calloc(num_of_elems, elem_size);
+  return ptr;
 }
 static void std_free(Allocator *, void *ptr) { free(ptr); }
 static void *std_remap(Allocator *, size_t ptr_size, char ptr[ptr_size],
                        size_t elem_size, size_t num_of_elems) {
-  return realloc(ptr, elem_size * num_of_elems);
+  void *ret_ptr = realloc(ptr, elem_size * num_of_elems);
+  return ret_ptr;
 }
 
 Allocator std_allocator = {
