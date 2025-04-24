@@ -43,42 +43,35 @@ void debugDrawCapsule(b2Vec2 p1, b2Vec2 p2, float radius, b2HexColor color,
                       RenderContext *ctx);
 void debugDrawSolidCapsule(b2Vec2 p1, b2Vec2 p2, float radius, b2HexColor color,
                            RenderContext *ctx);
-void debugDrawString(b2Vec2 p, const char *s, RenderContext *ctx);
+void debugDrawString(b2Vec2 p, const char *s, b2HexColor color,
+                     RenderContext *ctx);
 void debugDrawTransform(b2Transform transform, RenderContext *ctx);
 void debugDrawSegment(b2Vec2 p1, b2Vec2 p2, b2HexColor color,
                       RenderContext *ctx);
 
 struct b2DebugDraw debug_draw = {
-    .DrawPolygon =
+    .DrawPolygonFcn =
         ((void (*)(const b2Vec2 *, int, b2HexColor, void *))debugDrawPolygon),
-    .DrawSolidPolygon = ((void (*)(b2Transform, const b2Vec2 *, int, float,
-                                   b2HexColor, void *))debugDrawSolidPolygon),
-    .DrawCircle =
+    .DrawSolidPolygonFcn =
+        ((void (*)(b2Transform, const b2Vec2 *, int, float, b2HexColor,
+                   void *))debugDrawSolidPolygon),
+    .DrawCircleFcn =
         ((void (*)(b2Vec2, float, b2HexColor, void *))debugDrawCircle),
-    .DrawSolidCircle = ((
+    .DrawSolidCircleFcn = ((
         void (*)(b2Transform, float, b2HexColor, void *))debugDrawSolidCircle),
-    .DrawCapsule =
-        ((void (*)(b2Vec2, b2Vec2, float, b2HexColor, void *))debugDrawCapsule),
-    .DrawSolidCapsule = ((void (*)(b2Vec2, b2Vec2, float, b2HexColor,
-                                   void *))debugDrawSolidCapsule),
-    .DrawSegment =
+    .DrawSolidCapsuleFcn = ((void (*)(b2Vec2, b2Vec2, float, b2HexColor,
+                                      void *))debugDrawSolidCapsule),
+    .DrawSegmentFcn =
         ((void (*)(b2Vec2, b2Vec2, b2HexColor, void *))debugDrawSegment),
-    .DrawTransform = ((void (*)(b2Transform, void *))debugDrawTransform),
-    .DrawPoint = ((void (*)(b2Vec2, float, b2HexColor, void *))debugDrawPoint),
-    .DrawString = ((void (*)(b2Vec2, const char *, void *))debugDrawString),
+    .DrawTransformFcn = ((void (*)(b2Transform, void *))debugDrawTransform),
+    .DrawPointFcn =
+        ((void (*)(b2Vec2, float, b2HexColor, void *))debugDrawPoint),
+    .DrawStringFcn =
+        ((void (*)(b2Vec2, const char *, b2HexColor, void *))debugDrawString),
 
     .drawingBounds = (b2AABB){(b2Vec2){0, 0}, (b2Vec2){0, 0}},
-    .useDrawingBounds = false,
+    .drawBodyNames = true,
     .drawShapes = true,
-    .drawJoints = false,
-    .drawJointExtras = false,
-    .drawAABBs = false,
-    .drawMass = false,
-    .drawContacts = false,
-    .drawGraphColors = false,
-    .drawContactNormals = false,
-    .drawContactImpulses = false,
-    .drawFrictionImpulses = false,
     .context = NULL,
 };
 
@@ -186,13 +179,14 @@ void debugDrawSolidCapsule(b2Vec2 p1, b2Vec2 p2, float radius, b2HexColor color,
   if (ctx == NULL)
     return;
 }
-void debugDrawString(b2Vec2 p, const char *s, RenderContext *ctx) {
+void debugDrawString(b2Vec2 p, const char *s, b2HexColor color,
+                     RenderContext *ctx) {
   if (ctx == NULL)
     return;
 
   SDL_FPoint tf = RenderContext_getTransform(ctx);
 
-  setColor(ctx, b2_colorWhite, 0xFF);
+  setColor(ctx, color, 0xFF);
   SDL_RenderDebugText(ctx->renderer, p.x * PPM_F + tf.x, p.y * PPM_F + tf.y, s);
 }
 

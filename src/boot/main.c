@@ -194,7 +194,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
     case SDLK_B:
       // These look yucky. We don't like them all the time.
       // It gives me a headache
-      debug_draw.drawAABBs = !debug_draw.drawAABBs;
+      debug_draw.drawBounds = !debug_draw.drawBounds;
       break;
 #endif
     }
@@ -253,7 +253,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   debug_draw.context = &frame_ctx;
 
   // Lock the thread mutex so the fixed update doesn't break and have a race
-  // condition with box2d. We only need TryLockMutex because this update function runs extremely fast in most cases.
+  // condition with box2d. We only need TryLockMutex because this update
+  // function runs extremely fast in most cases.
   if (SDL_TryLockMutex(state->fixedUpdate_mutex)) {
     b2World_Draw(state->world, &debug_draw);
     SDL_UnlockMutex(state->fixedUpdate_mutex);
