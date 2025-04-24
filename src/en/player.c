@@ -44,8 +44,6 @@ Player Player_create(b2WorldId world, float x, float y,
       b2MakeBox(super.width / 2.0f / PPM_F, super.height / 2.0f / PPM_F);
   b2ShapeDef shape_def = b2DefaultShapeDef();
   shape_def.density = 1.0f;
-  shape_def.friction = 0.0f;
-  shape_def.restitution = 0.0f;
   b2CreatePolygonShape(body, &shape_def, &shape);
 
   return (Player){
