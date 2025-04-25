@@ -33,7 +33,6 @@ Object2D Object2D_create(float x, float y, float width, float height) {
       .pos = {.x = x, .y = y},
       .width = width,
       .height = height,
-      .children = List_create(&std_allocator, 0),
       .postRender = Object2D_postRender,
       .preRender = Object2D_preRender,
       .render = Object2D_render,
@@ -43,16 +42,11 @@ Object2D Object2D_create(float x, float y, float width, float height) {
 }
 
 void Object2D_destroy(Object2D *self) {
-  for (Object2DNode *head = (Object2DNode *)self->children.head;
-       head != NULL && head->obj != NULL; head = (Object2DNode *)head->next) {
-    head->obj->parent = NULL;
-    objrefcall(head->obj, destroy);
-  }
-
-  List_destroy(&self->children);
+  debugAssert(self != NULL, "self == NULL");
 }
 
 void Object2D_preRender(Object2D *self, RenderContext *ctx) {
+  debugAssert(self != NULL, "self == NULL");
   SDL_FPoint transform = RenderContext_getTransform(ctx);
 
   transform.x += (int)self->pos.x;
@@ -61,31 +55,13 @@ void Object2D_preRender(Object2D *self, RenderContext *ctx) {
   Stack_push(ctx->transforms, transform);
 }
 void Object2D_render(Object2D *self, RenderContext *ctx) {
-  for (Object2DNode *head = (Object2DNode *)self->children.head;
-       head != NULL && head->obj != NULL; head = (Object2DNode *)head->next) {
-
-    objrefcall(head->obj, preRender, ctx);
-    objrefcall(head->obj, render, ctx);
-    objrefcall(head->obj, postRender, ctx);
-  }
+  debugAssert(self != NULL, "self == NULL");
 }
 void Object2D_postRender(Object2D *self, RenderContext *ctx) {
+  debugAssert(self != NULL, "self == NULL");
   Stack_pop(ctx->transforms);
 }
 
 void Object2D_update(Object2D *self, double delta_time) {
-  for (Object2DNode *head = (Object2DNode *)self->children.head; head != NULL;
-       head = (Object2DNode *)head->next) {
-    head->obj->update(head->obj, delta_time);
-  }
-}
-
-void Object2D_addChild(Object2D *self, Object2D *child) {
-  if (child == NULL)
-    return;
-
-  Object2DNode *node = (Object2DNode *)List_push(&self->children);
-  node->obj = child;
-
-  child->parent = self;
+  debugAssert(self != NULL, "self == NULL");
 }

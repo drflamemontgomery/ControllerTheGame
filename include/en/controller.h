@@ -19,17 +19,23 @@
 #ifndef CONTROLLER_OBJ_H
 #define CONTROLLER_OBJ_H
 
+#include "en/obj.h"
 #include "input/controller.h"
-#include "obj.h"
+#include <box2d/box2d.h>
 
 typedef struct ControllerComponentObj {
-  Object2D super;
+  using(Object2D, super_object2d);
 
 } ControllerComponentObj;
 
 typedef struct ControllerObj {
-  Object2D super;
+  using(Object2D, super_object2d);
 
+  ControllerDevice controller;
+  b2BodyId body;
 } ControllerObj;
+
+ControllerObj ControllerObj_create(b2WorldId world);
+void ControllerObj_destroy(ControllerObj *self);
 
 #endif // CONTROLLER_OBJ_H

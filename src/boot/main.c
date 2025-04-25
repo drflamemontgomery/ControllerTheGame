@@ -37,7 +37,7 @@
 #include "boot/app.h"
 #include "debug/debug.h"
 #include "debug/debug_draw.h"
-#include "en/player.h"
+#include "en/obj.h"
 #include "heap/allocator.h"
 #include "screen/ctx.h"
 #include "util/safe.h"
@@ -77,19 +77,9 @@ static SDL_AppResult fixedUpdate(AppState *state) {
   // Our appstate needs to let us know when to stop
   while (state->running) {
 
-    // Update our physics world
-    const float timestep = 1.0f / 60.0f;
-    const int substep_count = 4;
-
-    // Prevent the Main thread from attempting to access box2d World
-    SDL_LockMutex(state->fixedUpdate_mutex);
-    b2World_Step(state->world, timestep, substep_count);
-    // Allow the Main thread to access box2d again
-    SDL_UnlockMutex(state->fixedUpdate_mutex);
-
-    // update our root player
-    // TODO replace with root scene node
-    objcall(state->player.super, update, state->delta_time);
+    debugAssert(state->scene != NULL, "state->scene == NULL");
+    // update our root scene node
+    objrefcall(state->scene, update, state->delta_time);
 
     // Frame capping
     const double fps_tick = (double)SDL_GetTicks();
@@ -143,19 +133,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   // it on the heap so that we can pass it around easily
   AppState *state = AppState_default(global_allocator);
 
-  // Create a Heap-Allocated Controller Component for our player so we can
-  // access movement.
-  // TODO make a controller subsystem for handling controls.
-  state->player.controller =
-      (PlayerController *)KeyboardController_default(global_allocator);
-
   state->fixedUpdate_thread = SDL_CreateThread((SDL_ThreadFunction)fixedUpdate,
                                                "Fixed Update", (void *)state);
   if (state->fixedUpdate_thread == NULL) {
     SDL_Log("Failed to create fixedUpdate Thread: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
-  state->fixedUpdate_mutex = SDL_CreateMutex();
 
   // This allows our Application to access the state
   *appstate = (void *)state;
@@ -243,22 +226,15 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   RenderContext frame_ctx = RenderContext_create(renderer);
   Stack_push(frame_ctx.transforms, initial);
 
+  debugAssert(state->scene != NULL, "state->scene == NULL");
   // Render Root Player Sequence
-  objcall(state->player.super, preRender, &frame_ctx);
-  objcall(state->player.super, render, &frame_ctx);
-  objcall(state->player.super, postRender, &frame_ctx);
+  objrefcall(state->scene, preRender, &frame_ctx);
+  objrefcall(state->scene, render, &frame_ctx);
+  objrefcall(state->scene, postRender, &frame_ctx);
 
 #ifdef DEBUG
   // Draw the box2d world
   debug_draw.context = &frame_ctx;
-
-  // Lock the thread mutex so the fixed update doesn't break and have a race
-  // condition with box2d. We only need TryLockMutex because this update
-  // function runs extremely fast in most cases.
-  if (SDL_TryLockMutex(state->fixedUpdate_mutex)) {
-    b2World_Draw(state->world, &debug_draw);
-    SDL_UnlockMutex(state->fixedUpdate_mutex);
-  }
 
   // We no longer need the RenderContext and it has heap memory
   // stored in it. So lets destroy it

@@ -28,10 +28,10 @@
 
 Player Player_create(b2WorldId world, float x, float y,
                      PlayerController *controller) {
-  Object2D super = Object2D_create(x, y, 8, 16);
-  super.update = (void (*)(Object2D *, double))Player_update;
-  super.render = (void (*)(Object2D *, RenderContext *))Player_render;
-  super.destroy = (void (*)(Object2D *))Player_destroy;
+  Object2D super_object2d = Object2D_create(x, y, 8, 16);
+  super_object2d.update = (void (*)(Object2D *, double))Player_update;
+  super_object2d.render = (void (*)(Object2D *, RenderContext *))Player_render;
+  super_object2d.destroy = (void (*)(Object2D *))Player_destroy;
 
   b2BodyDef bd = b2DefaultBodyDef();
   bd.type = b2_dynamicBody;
@@ -40,14 +40,14 @@ Player Player_create(b2WorldId world, float x, float y,
 
   b2BodyId body = b2CreateBody(world, &bd);
 
-  b2Polygon shape =
-      b2MakeBox(super.width / 2.0f / PPM_F, super.height / 2.0f / PPM_F);
+  b2Polygon shape = b2MakeBox(super_object2d.width / 2.0f / PPM_F,
+                              super_object2d.height / 2.0f / PPM_F);
   b2ShapeDef shape_def = b2DefaultShapeDef();
   shape_def.density = 1.0f;
   b2CreatePolygonShape(body, &shape_def, &shape);
 
   return (Player){
-      .super = super,
+      .super_object2d = super_object2d,
       .body = body,
       .controller = controller,
   };
@@ -61,25 +61,25 @@ void Player_destroy(Player *self) {
   objrefcall(self->controller, destroy);
   self->controller = NULL;
 
-  Object2D_destroy(&self->super);
+  Object2D_destroy(&self->super_object2d);
 }
 
 void Player_render(Player *self, RenderContext *ctx) {
   SDL_FPoint transform = RenderContext_getTransform(ctx);
   SDL_FRect rect = {
-      .x = transform.x - self->super.width / 2.0f,
-      .y = transform.y - self->super.height / 2.0f,
-      .w = self->super.width,
-      .h = self->super.height,
+      .x = transform.x - self->width / 2.0f,
+      .y = transform.y - self->height / 2.0f,
+      .w = self->width,
+      .h = self->height,
   };
   SDL_SetRenderDrawColor(ctx->renderer, 0xFF, 0xFF, 0xFF, 0xFF);
   SDL_RenderFillRect(ctx->renderer, &rect);
-  Object2D_render(&self->super, ctx);
+  Object2D_render(&self->super_object2d, ctx);
 }
 
 void Player_update(Player *self, double delta_time) {
   b2Vec2 pos = b2Body_GetPosition(self->body);
-  self->super.pos = (SDL_FPoint){pos.x * PPM_F, pos.y * PPM_F};
+  self->pos = (SDL_FPoint){pos.x * PPM_F, pos.y * PPM_F};
 
   if (self->controller == NULL)
     return;
@@ -183,7 +183,7 @@ const PlayerController KEYBOARD_SUPER = {
 };
 
 KeyboardController *KeyboardController_default(Allocator *allocator) {
-  KeyboardController *self = allocPtr(allocator, sizeof(KeyboardController), 1);
+  KeyboardController *self = allocPtr(KeyboardController, allocator, 1);
 
   *self = (KeyboardController){
       .super = KEYBOARD_SUPER,

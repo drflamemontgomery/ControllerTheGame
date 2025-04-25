@@ -81,7 +81,7 @@ enum PlayerState {
 };
 
 typedef struct Player {
-  Object2D super;
+  using(Object2D, super_object2d);
   PlayerController *controller;
   b2BodyId body;
 } Player;

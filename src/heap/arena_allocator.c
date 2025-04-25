@@ -1,3 +1,21 @@
+/*
+    Allocation Type That Tracks Allocations
+    Copyright (C) 2025  Ashton Warner
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "heap/arena_allocator.h"
 #include "debug/debug.h"
 #include "heap/allocator.h"
@@ -47,7 +65,7 @@ static void *ArenaAllocator_alloc(ArenaAllocator *self, size_t elem_size,
 
   self->m_first_free_allocation = i + 1;
   self->m_allocations.ptr[i].ptr =
-      allocPtr(self->m_allocator, elem_size, num_of_elems);
+      allocBlock(self->m_allocator, elem_size, num_of_elems);
   self->m_allocations.ptr[i].allocated = true;
   return self->m_allocations.ptr[i].ptr;
 }

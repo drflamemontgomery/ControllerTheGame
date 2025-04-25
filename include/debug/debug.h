@@ -37,6 +37,7 @@
   }
 #else
 #define trace(msg, ...)
+#define errtrace(msg, ...)
 #define debugAssert(cond, msg, ...)
 #endif
 

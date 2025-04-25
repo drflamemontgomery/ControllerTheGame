@@ -17,9 +17,9 @@
 CC = gcc
 
 ifdef NODEBUG
-	DEBUGFLAGS := #empty
+	EXTRAFLAGS := -Ofast
 else
-	DEBUGFLAGS := -DDEBUG -g -fsanitize=leak -rdynamic -Wmissing-field-initializers -Wall -Werror -Wno-missing-braces -Wno-unused-parameter -W 
+	EXTRAFLAGS := -DDEBUG -Og -g -fsanitize=leak -rdynamic -Wmissing-field-initializers -Wall -Werror -Wno-missing-braces -Wno-unused-parameter -W 
 endif
 
 # Object Files to be created. If this starts becoming larger, 
@@ -27,14 +27,16 @@ endif
 OBJECTS = \
 			obj/boot/main.o\
 			obj/boot/app.o\
-			obj/screen/ctx.o\
-			obj/util/list.o\
+			obj/input/controller.o\
 			obj/heap/allocator.o\
 			obj/heap/arena_allocator.o\
+			obj/util/list.o\
+			obj/screen/ctx.o\
 			obj/en/obj.o\
 			obj/en/player.o\
 			obj/en/testobj.o\
-			obj/input/controller.o\
+			obj/en/controller.o\
+			obj/scene/controller_debug.o\
 			obj/debug/debug_draw.o\
 			$(END)
 
@@ -48,11 +50,12 @@ OBJDIRS = \
 					obj/en\
 					obj/input\
 					obj/debug\
+					obj/scene\
 					obj/heap\
 					$(END)
 
 LIBS := -lSDL3 -lbox2d
-CFLAGS := $(CFLAGS) -Iinclude $(DEBUGFLAGS)
+CFLAGS := $(CFLAGS) -Iinclude $(EXTRAFLAGS)
 
 # Define the global project name for easy use
 PROJECT_NAME := controller_game

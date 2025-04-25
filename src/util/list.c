@@ -32,8 +32,8 @@ ListNode *List_push(List *self) {
   debugAssert(self != NULL, "self == NULL");
 
   ListNode *node = self->elem_size > 0
-                       ? allocPtr(self->allocator, self->elem_size, 1)
-                       : allocPtr(self->allocator, sizeof(ListNode), 1);
+                       ? allocBlock(self->allocator, self->elem_size, 1)
+                       : allocPtr(ListNode, self->allocator, 1);
 
   if (self->head == NULL) {
     self->tail = self->head = node;

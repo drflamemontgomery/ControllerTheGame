@@ -17,4 +17,41 @@
 */
 
 #include "en/controller.h"
+#include "debug/debug.h"
+#include "en/obj.h"
 #include "input/controller.h"
+#include "util/options.h"
+#include <box2d/types.h>
+
+ControllerObj ControllerObj_create(b2WorldId world) {
+  Object2D super = Object2D_default();
+  super.destroy = (typeof(super.destroy))ControllerObj_destroy;
+
+  b2BodyDef bd = b2DefaultBodyDef();
+  bd.position = (b2Vec2){2.0f, -2.0f};
+  bd.type = b2_staticBody;
+  bd.fixedRotation = true;
+
+  b2BodyId body = b2CreateBody(world, &bd);
+
+  // Debug placeholder shape
+  b2Polygon shape = b2MakeBox(1.0f, 1.0f);
+
+  b2ShapeDef shape_def = b2DefaultShapeDef();
+  shape_def.density = 1.0f;
+  b2CreatePolygonShape(body, &shape_def, &shape);
+
+  return (ControllerObj){
+      .super_object2d = super,
+      .body = body,
+      .controller = ControllerDevice_default(),
+  };
+}
+
+void ControllerObj_destroy(ControllerObj *self) {
+  debugAssert(self != NULL, "self == NULL");
+  Object2D_destroy(&self->super_object2d);
+
+  b2DestroyBody(self->body);
+  ControllerDevice_destroy(&self->controller);
+}

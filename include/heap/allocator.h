@@ -41,15 +41,17 @@ extern Allocator std_allocator;
 
 void freePtr(Allocator *allocator, void *ptr);
 
-void *allocPtr(Allocator *allocator, size_t elem_size, size_t num_of_elems);
+void *allocBlock(Allocator *allocator, size_t elem_size, size_t num_of_elems);
 void *remapBlock(Allocator *allocator, size_t ptr_size, char ptr[ptr_size],
                  size_t elem_size, size_t num_of_elems);
 
+#define allocPtr(T, allocator, num_of_elems)                                   \
+  (T *)allocBlock(allocator, sizeof(T), num_of_elems)
 #define allocSlice(T, allocator, num_of_elems)                                 \
-  Slice_create(allocPtr(allocator, sizeof(T), num_of_elems), num_of_elems)
+  Slice_create(allocPtr(T, allocator, num_of_elems), num_of_elems)
 
 #define freeSlice(allocator, slice) freePtr(allocator, (slice).ptr)
-#define remapSlice(allocator, slice, num_of_elems)                  \
+#define remapSlice(allocator, slice, num_of_elems)                             \
   Slice_create(typeof(*(slice).ptr),                                           \
                remapBlock(allocator, (slice).len * sizeof(*(slice).ptr),       \
                           (char *)(slice).ptr, elem_size, num_of_elems),       \

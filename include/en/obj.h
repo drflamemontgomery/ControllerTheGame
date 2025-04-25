@@ -23,25 +23,30 @@
 #include <box2d/box2d.h>
 #include <box2d/math_functions.h>
 
-#include "util/list.h"
-
 #include "screen/ctx.h"
 
-typedef struct Object2D {
-  SDL_FPoint pos;
-  float width;
-  float height;
+#define struct$Object2D(SNAME)                                                 \
+  struct SNAME {                                                               \
+    SDL_FPoint pos;                                                            \
+    float width;                                                               \
+    float height;                                                              \
+                                                                               \
+    struct Object2D *parent;                                                   \
+                                                                               \
+    void (*preRender)(struct Object2D *, RenderContext *ctx);                  \
+    void (*render)(struct Object2D *, RenderContext *ctx);                     \
+    void (*postRender)(struct Object2D *, RenderContext *ctx);                 \
+                                                                               \
+    void (*update)(struct Object2D *, double delta_time);                      \
+    void (*destroy)(struct Object2D *);                                        \
+  }
 
-  struct Object2D *parent;
-  List children;
-
-  void (*preRender)(struct Object2D *, RenderContext *ctx);
-  void (*render)(struct Object2D *, RenderContext *ctx);
-  void (*postRender)(struct Object2D *, RenderContext *ctx);
-
-  void (*update)(struct Object2D *, double delta_time);
-  void (*destroy)(struct Object2D *);
-} Object2D;
+typedef struct$Object2D(Object2D) Object2D;
+#define using(TYPE, SUPERNAME)                                                 \
+  union {                                                                      \
+    struct$##TYPE();                                                           \
+    TYPE SUPERNAME;                                                            \
+  }
 
 void Object2D_preRender(struct Object2D *, RenderContext *ctx);
 void Object2D_render(struct Object2D *, RenderContext *ctx);
@@ -51,5 +56,4 @@ void Object2D_update(struct Object2D *, double delta_time);
 Object2D Object2D_default();
 Object2D Object2D_create(float x, float y, float width, float height);
 void Object2D_destroy(Object2D *self);
-void Object2D_addChild(Object2D *self, Object2D *child);
 #endif // OBJ_H

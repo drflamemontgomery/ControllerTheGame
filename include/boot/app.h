@@ -43,14 +43,9 @@ typedef struct AppState {
   Allocator *allocator;
 
   AppOptions options;
-  Player player;
-  Object2D *testobj;
-  ControllerDevice controller_out;
+  Object2D *scene;
 
   SDL_Thread *fixedUpdate_thread;
-  SDL_Mutex* fixedUpdate_mutex;
-
-  b2WorldId world;
 } AppState;
 
 AppState *AppState_default(Allocator *allocator);

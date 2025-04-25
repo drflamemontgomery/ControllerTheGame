@@ -19,6 +19,7 @@
 #include "boot/app.h"
 #include "debug/debug.h"
 #include "en/obj.h"
+#include "scene/controller_debug.h"
 #include "util/safe.h"
 #include <SDL3/SDL_timer.h>
 #include <box2d/box2d.h>
@@ -27,18 +28,7 @@
 
 AppState *AppState_default(Allocator *allocator) {
 
-  b2WorldDef world_def = b2DefaultWorldDef();
-  world_def.gravity = (b2Vec2){0.0f, 1.0f};
-  b2WorldId world = b2CreateWorld(&world_def);
-
-  Player player = Player_create(world, 2.0f, -3.0f, NULL);
-
-  Object2D *testobj = allocPtr(allocator, sizeof(Object2D), 1);
-  *testobj = TestObj_create(32.0f, 32.0f);
-
-  Object2D_addChild(&player.super, testobj);
-
-  b2BodyDef grounddef = b2DefaultBodyDef();
+  /*b2BodyDef grounddef = b2DefaultBodyDef();
   grounddef.position = (b2Vec2){
       0.0f,
       0.0f,
@@ -51,23 +41,21 @@ AppState *AppState_default(Allocator *allocator) {
   };
   b2ShapeDef groundshapedef = b2DefaultShapeDef();
   groundshapedef.density = 1.0f;
-  b2CreateSegmentShape(ground, &groundshapedef, &groundsegment);
+  b2CreateSegmentShape(ground, &groundshapedef, &groundsegment);*/
 
-  AppState *state = allocPtr(allocator, sizeof(AppState), 1);
+  ControllerDebugScene *debug_scene = ControllerDebugScene_create(allocator);
+
+  AppState *state = allocPtr(AppState, allocator, 1);
   *state = (AppState){
       .delta_time = 0.0f,
       .last_tick = SDL_GetTicks(),
       .running = true,
 
-      .controller_out = ControllerDevice_default(),
-      .options = {false, true},
-      .player = player,
-      .testobj = testobj,
-      .world = world,
+      .options = {false, false},
       .allocator = allocator,
+      .scene = &debug_scene->super_object2d,
 
       .fixedUpdate_thread = NULL,
-      .fixedUpdate_mutex = NULL,
   };
   return state;
 }
@@ -79,14 +67,7 @@ void AppState_destroy(AppState *self) {
     SDL_WaitThread(self->fixedUpdate_thread, NULL);
     self->fixedUpdate_thread = NULL;
   }
-  if(self->fixedUpdate_mutex != NULL) {
-    SDL_DestroyMutex(self->fixedUpdate_mutex);
-    self->fixedUpdate_mutex = NULL;
-  }
 
-  Player_destroy(&self->player);
-  freePtr(self->allocator, self->testobj);
-  b2DestroyWorld(self->world);
-
+  objrefcall(self->scene, destroy);
   freePtr(self->allocator, self);
 }

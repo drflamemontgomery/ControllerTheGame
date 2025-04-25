@@ -159,7 +159,7 @@ ControllerComponent ControllerComponent_create(Allocator *allocator,
           {
               .length = 0,
               .max_value = 4,
-              .value = allocPtr(allocator, sizeof(int), 4),
+              .value = allocPtr(int, allocator, 4),
           },
   };
 }
